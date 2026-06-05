@@ -3,7 +3,6 @@
 {% block content %}
 <div class="container mt-5">
 
-    <h1>Dashboard NexTask</h1>
 
     <p>Olá, <strong>{{ user.username }}</strong>!</p>
 
@@ -47,19 +46,7 @@
 
     </div>
 
-    <div class="mt-4">
-        <a href="{% url 'lista_tarefas' %}" class="btn btn-primary">
-            Ver Tarefas
-        </a>
-
-        <a href="{% url 'add_tarefa' %}" class="btn btn-success">
-            Nova Tarefa
-        </a>
-
-        <a href="{% url 'logout_user' %}" class="btn btn-danger">
-            Sair
-        </a>
-    </div>
+    
 
 </div>
 {% endblock %}
