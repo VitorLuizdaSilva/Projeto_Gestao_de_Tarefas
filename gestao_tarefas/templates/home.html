@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h1>Dashboard NexTask</h1>
+
+    <p>Olá, <strong>{{ user.username }}</strong>!</p>
+
+    <div class="row mt-4">
+
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Total</h5>
+                    <h2>{{ total }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Pendentes</h5>
+                    <h2>{{ pendentes }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Em Andamento</h5>
+                    <h2>{{ andamento }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Concluídas</h5>
+                    <h2>{{ concluidas }}</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'lista_tarefas' %}" class="btn btn-primary">
+            Ver Tarefas
+        </a>
+
+        <a href="{% url 'add_tarefa' %}" class="btn btn-success">
+            Nova Tarefa
+        </a>
+
+        <a href="{% url 'logout_user' %}" class="btn btn-danger">
+            Sair
+        </a>
+    </div>
+
+</div>
+{% endblock %}

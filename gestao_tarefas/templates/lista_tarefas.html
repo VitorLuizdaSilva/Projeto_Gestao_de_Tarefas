@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Minhas Tarefas</h2>
+    {% if tarefas %}
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>Título</th>
+                    <th>Descrição</th>
+                    <th>Urgência</th>
+                    <th>Status</th>
+                    <th>Ações</th>  
+                </tr>
+            </thead>
+            <tbody>
+                {% for tarefa in tarefas %}
+
+                    <tr>
+                       
+                        <td>{{ tarefa.usuario }}</td>
+                        <td>{{ tarefa.titulo }}</td>
+                        <td>{{ tarefa.descricao }}</td>
+                        <td>{{ tarefa.get_urgencia_display }}</td>
+                        <td>{{ tarefa.get_status_display }}</td>
+                        <td>
+                            {% if tarefa.status != 'C' %}   
+                               
+                                <a href="{% url 'concluir_tarefa' tarefa.id %}" class="btn btn-sm btn-success">Concluir</a> 
+                            {% endif %}
+                            <a href="{% url 'deletar_tarefa' tarefa.id %}" class="btn btn-sm btn-danger">Deletar</a>
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-center mt-5">Nenhuma tarefa encontrada. <a href="{% url 'add_tarefa' %}">Adicione uma nova tarefa.</a></p>
+    {% endif %}
+</div>
+{% endblock %}  

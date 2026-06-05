@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label for="titulo" class="form-label">Título</label>
+        <input type="text" class="form-control" id="titulo" name="titulo" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="descricao" class="form-label">Descrição</label>
+        <textarea class="form-control" id="descricao" name="descricao" rows="3"></textarea>
+    </div>
+
+   {% if is_gerente %}
+    <div class="mb-3">
+        <label for="usuario" class="form-label">Usuário</label>
+        <select class="form-control" id="usuario" name="usuario">
+            {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}">
+                    {{ usuario.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    <div class="mb-3">
+        <label for="urgencia" class="form-label">Urgência</label>
+        <select class="form-control" id="urgencia" name="urgencia">
+            <option value="B">Baixa</option>
+            <option value="M">Média</option>
+            <option value="A">Alta</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Adicionar Tarefa
+    </button>
+</form>
+{% endblock %}
