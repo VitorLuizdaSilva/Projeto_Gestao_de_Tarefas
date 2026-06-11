@@ -2,7 +2,8 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2>Minhas Tarefas</h2>
+    
+    <h2>Tarefas</h2>
     {% if tarefas %}
         <table class="table table-striped mt-3">
             <thead>
@@ -31,6 +32,7 @@
                                 <a href="{% url 'concluir_tarefa' tarefa.id %}" class="btn btn-sm btn-success">Concluir</a> 
                             {% endif %}
                             <a href="{% url 'deletar_tarefa' tarefa.id %}" class="btn btn-sm btn-danger">Deletar</a>
+                            <a href="{% url 'edit_tarefa' tarefa.id %}" class="btn btn-sm btn-primary">Editar</a>
                         </td>
 
                     </tr>

@@ -16,7 +16,7 @@ def lista_tarefas(request):
     if request.user.groups.filter(name='Gerente').exists():
 
         tarefas = Tarefa.objects.all()
-
+        tarefas = Tarefa.objects.exclude(status='CO')
         return render(
             request,
             'lista_tarefas.html',
@@ -29,7 +29,7 @@ def lista_tarefas(request):
         tarefas = Tarefa.objects.filter(
             usuario=request.user
         )
-
+        tarefas = Tarefa.objects.exclude(status='CO')
         return render(
             request,
             'lista_tarefas.html',
@@ -79,10 +79,6 @@ def cadastro_senha(request):
     )
 
 
-
-
-
-# LOGIN
 def login_user(request):
 
     if request.method == 'POST':
@@ -118,15 +114,14 @@ def login_user(request):
             return redirect('login')
 
     return render(request, 'login.html')
-# LOGOUT
+
+
 def logout_user(request):
 
     logout(request)
 
     return redirect('login')
 
-
-# ADICIONAR TAREFA
 
 def add_tarefa(request):
 
@@ -172,7 +167,6 @@ def add_tarefa(request):
         )
 
 
-# EDITAR TAREFA
 def edit_tarefa(request, tarefa_id):
 
     tarefa = Tarefa.objects.get(id=tarefa_id)
@@ -205,7 +199,6 @@ def edit_tarefa(request, tarefa_id):
         )
 
 
-# DELETAR TAREFA
 def deletar_tarefa(request, tarefa_id):
 
     tarefa = Tarefa.objects.get(id=tarefa_id)
@@ -240,6 +233,7 @@ def home(request):
 
     return render(request, 'home.html', context)
 
+
 def concluir_tarefa(request, tarefa_id):
 
     tarefa = Tarefa.objects.get(id=tarefa_id)
@@ -247,4 +241,4 @@ def concluir_tarefa(request, tarefa_id):
     tarefa.status = 'CO'
 
     tarefa.save()   
-
+    return redirect ('home')
