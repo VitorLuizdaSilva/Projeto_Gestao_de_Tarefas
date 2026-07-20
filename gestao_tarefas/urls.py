@@ -1,11 +1,11 @@
 
 from django.contrib import admin
 from django.urls import path
-from .views import home, cadastro_senha, login_user, logout_user, add_tarefa, edit_tarefa, deletar_tarefa, lista_tarefas, concluir_tarefa
+from .views import home, alterar_senha, login_user, logout_user, add_tarefa, edit_tarefa, deletar_tarefa, lista_tarefas, concluir_tarefa
 urlpatterns = [
     path('', login_user, name='login'),
     path('home/', home, name='home'),
-    path('cadastro_senha/', cadastro_senha, name='cadastro_senha'),
+    path('alterar_senha/', alterar_senha, name='alterar_senha'),
     path('logout/', logout_user, name='logout_user'),
     path('add_tarefa/', add_tarefa, name='add_tarefa'),
     path('edit_tarefa/<int:tarefa_id>/', edit_tarefa, name='edit_tarefa'),

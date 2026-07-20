@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, Group
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
+from django.contrib.auth.forms import PasswordChangeForm
 from .models import Tarefa, Perfil
 
 
@@ -47,37 +47,45 @@ def lista_tarefas(request):
 
 
 
-def cadastro_senha(request):
+def alterar_senha (request):
 
     if request.method == 'POST':
 
-        form = UserCreationForm(request.POST)
+        form = PasswordChangeForm(
+            user=request.user,
+            data=request.POST
+        )
 
         if form.is_valid():
 
             user = form.save()
 
-            # adiciona automaticamente no grupo Funcionario
-            group = Group.objects.get(name='Funcionario')
-            user.groups.add(group)
+            update_session_auth_hash(
+                request,
+                user
+            )
+
+            perfil = Perfil.objects.get(user=user)
+            perfil.atualizar_senha()
 
             messages.success(
                 request,
-                'Usuário cadastrado com sucesso!'
+                'Senha alterada com sucesso!'
             )
 
-            return redirect('login')
+            return redirect('home')
 
     else:
 
-        form = UserCreationForm()
+        form = PasswordChangeForm(
+            user=request.user
+        )
 
     return render(
         request,
-        'cadastro_user.html',
+        'alterar_senha.html',
         {'form': form}
     )
-
 
 def login_user(request):
 
