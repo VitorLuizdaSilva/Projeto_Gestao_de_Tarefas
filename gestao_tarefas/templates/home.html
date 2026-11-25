@@ -1,12 +1,25 @@
+
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Workspace | NexTask{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'gestao_tarefas/css/kanban.css' %}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gestao_tarefas/css/kanban.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="app-layout">
   <aside class="sidebar">
-    <a href="/home/" class="sidebar-brand"><span class="brand-mark">N</span><span>NexTask</span></a>
-    <div class="workspace-switch"><span class="workspace-icon">W</span><span><small>WORKSPACE</small><strong>Meu espaço</strong></span><span class="chevron">⌄</span></div>
+    <a href="/home/" class="sidebar-brand">
+      <span class="brand-mark">N</span><span>NexTask</span>
+    </a>
+
+    <div class="workspace-switch">
+      <span class="workspace-icon">W</span>
+      <span><small>WORKSPACE</small><strong>Meu espaço</strong></span>
+      <span class="chevron">⌄</span>
+    </div>
+
     <nav class="sidebar-section">
       <span class="sidebar-label">MENU PRINCIPAL</span>
       <button class="sidebar-link active" data-page="board"><span>▦</span> Meu quadro</button>
@@ -14,88 +27,509 @@
       <button class="sidebar-link" data-page="teams"><span>♧</span> Equipes</button>
       <button class="sidebar-link" data-page="dashboard"><span>▤</span> Desempenho</button>
     </nav>
+
+    <!-- Gerenciamento: somente SUPREMO e GERENTE -->
+    <nav class="sidebar-section hidden" id="user-management-menu">
+      <span class="sidebar-label">GERENCIAMENTO</span>
+      <button class="sidebar-link" data-page="user-create">
+        <span>＋</span> Cadastrar usuário
+      </button>
+      <button class="sidebar-link" data-page="users">
+        <span>♙</span> Gerenciar usuários
+      </button>
+    </nav>
+
     <div class="sidebar-bottom">
-      <div class="sidebar-user"><div class="user-avatar" id="user-avatar">N</div><div class="user-info"><strong id="user-name">Carregando...</strong><small id="user-role">Usuário</small></div></div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">N</div>
+        <div class="user-info">
+          <strong id="user-name">Carregando...</strong>
+          <small id="user-role">Usuário</small>
+        </div>
+      </div>
       <button id="logout-button" class="sidebar-logout">↗ <span>Sair da conta</span></button>
     </div>
   </aside>
+
   <main class="main-content">
     <header class="topbar">
-      <div class="mobile-brand"><span class="brand-mark">N</span><strong>NexTask</strong></div>
-      <div class="breadcrumb"><span>Workspace</span><b>/</b><strong id="page-breadcrumb">Meu quadro</strong></div>
-      <div class="topbar-actions"><label class="search-box"><span>⌕</span><input type="search" id="task-search" placeholder="Pesquisar tarefas..."></label><button class="btn btn-primary" id="new-task-button">＋ Nova tarefa</button></div>
+      <div class="mobile-brand">
+        <span class="brand-mark">N</span><strong>NexTask</strong>
+      </div>
+
+      <div class="breadcrumb">
+        <span>Workspace</span><b>/</b>
+        <strong id="page-breadcrumb">Meu quadro</strong>
+      </div>
+
+      <div class="topbar-actions">
+        <label class="search-box">
+          <span>⌕</span>
+          <input type="search" id="task-search" placeholder="Pesquisar tarefas...">
+        </label>
+        <button class="btn btn-primary" id="new-task-button">＋ Nova tarefa</button>
+      </div>
     </header>
+
     <div class="page-content">
+
+      <!-- QUADRO -->
       <section class="page-section active" id="page-board">
-        <div class="page-heading"><div><span class="eyebrow">VISÃO GERAL</span><h1>Meu quadro</h1><p>Organize suas tarefas e acompanhe seu progresso.</p></div><div class="heading-date" id="today-label"></div></div>
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">VISÃO GERAL</span>
+            <h1>Meu quadro</h1>
+            <p>Organize suas tarefas e acompanhe seu progresso.</p>
+          </div>
+          <div class="heading-date" id="today-label"></div>
+        </div>
+
         <section class="stats">
-          <article class="stat stat-total"><span class="stat-icon">▦</span><span>Total de tarefas</span><strong id="stat-total">0</strong><small>Atividades visíveis</small></article>
-          <article class="stat stat-pending"><span class="stat-icon">◷</span><span>A fazer</span><strong id="stat-pending">0</strong><small>Aguardando início</small></article>
-          <article class="stat stat-progress"><span class="stat-icon">↗</span><span>Em andamento</span><strong id="stat-progress">0</strong><small>Em execução</small></article>
-          <article class="stat stat-done"><span class="stat-icon">✓</span><span>Concluídas</span><strong id="stat-done">0</strong><small>Finalizadas</small></article>
+          <article class="stat stat-total">
+            <span class="stat-icon">▦</span><span>Total de tarefas</span>
+            <strong id="stat-total">0</strong><small>Atividades visíveis</small>
+          </article>
+          <article class="stat stat-pending">
+            <span class="stat-icon">◷</span><span>A fazer</span>
+            <strong id="stat-pending">0</strong><small>Aguardando início</small>
+          </article>
+          <article class="stat stat-progress">
+            <span class="stat-icon">↗</span><span>Em andamento</span>
+            <strong id="stat-progress">0</strong><small>Em execução</small>
+          </article>
+          <article class="stat stat-done">
+            <span class="stat-icon">✓</span><span>Concluídas</span>
+            <strong id="stat-done">0</strong><small>Finalizadas</small>
+          </article>
         </section>
-        <div class="section-heading"><div><h2>Quadro de tarefas</h2><p>Arraste os cartões para atualizar o status.</p></div><div class="board-filters"><select id="filter-team"><option value="">Todas as equipes</option></select><select id="filter-priority"><option value="">Todas as urgências</option><option value="A">Alta</option><option value="M">Média</option><option value="B">Baixa</option></select></div></div>
+
+        <div class="section-heading">
+          <div>
+            <h2>Quadro de tarefas</h2>
+            <p>Arraste os cartões para atualizar o status.</p>
+          </div>
+          <div class="board-filters">
+            <select id="filter-team"><option value="">Todas as equipes</option></select>
+            <select id="filter-priority">
+              <option value="">Todas as urgências</option>
+              <option value="A">Alta</option>
+              <option value="M">Média</option>
+              <option value="B">Baixa</option>
+            </select>
+          </div>
+        </div>
+
         <section class="kanban-board">
-          <div class="kanban-column" data-status="AF"><div class="column-header"><div><i class="status-dot pending"></i><strong>A fazer</strong></div><span class="task-count" id="count-AF">0</span></div><div class="task-list" id="tasks-AF"></div><button class="add-task-column" data-status="AF">＋ Adicionar tarefa</button></div>
-          <div class="kanban-column" data-status="EA"><div class="column-header"><div><i class="status-dot progress"></i><strong>Em andamento</strong></div><span class="task-count" id="count-EA">0</span></div><div class="task-list" id="tasks-EA"></div><button class="add-task-column" data-status="EA">＋ Adicionar tarefa</button></div>
-          <div class="kanban-column" data-status="CO"><div class="column-header"><div><i class="status-dot done"></i><strong>Concluído</strong></div><span class="task-count" id="count-CO">0</span></div><div class="task-list" id="tasks-CO"></div><button class="add-task-column" data-status="CO">＋ Adicionar tarefa</button></div>
+          <div class="kanban-column" data-status="AF">
+            <div class="column-header">
+              <div><i class="status-dot pending"></i><strong>A fazer</strong></div>
+              <span class="task-count" id="count-AF">0</span>
+            </div>
+            <div class="task-list" id="tasks-AF"></div>
+            <button class="add-task-column" data-status="AF">＋ Adicionar tarefa</button>
+          </div>
+
+          <div class="kanban-column" data-status="EA">
+            <div class="column-header">
+              <div><i class="status-dot progress"></i><strong>Em andamento</strong></div>
+              <span class="task-count" id="count-EA">0</span>
+            </div>
+            <div class="task-list" id="tasks-EA"></div>
+            <button class="add-task-column" data-status="EA">＋ Adicionar tarefa</button>
+          </div>
+
+          <div class="kanban-column" data-status="CO">
+            <div class="column-header">
+              <div><i class="status-dot done"></i><strong>Concluído</strong></div>
+              <span class="task-count" id="count-CO">0</span>
+            </div>
+            <div class="task-list" id="tasks-CO"></div>
+            <button class="add-task-column" data-status="CO">＋ Adicionar tarefa</button>
+          </div>
         </section>
       </section>
+
+      <!-- TAREFAS -->
       <section class="page-section" id="page-tasks">
-        <div class="page-heading"><div><span class="eyebrow">ATIVIDADES</span><h1>Todas as tarefas</h1><p>Consulte e gerencie as atividades disponíveis para você.</p></div><button class="btn btn-primary" id="new-task-button-alt">＋ Nova tarefa</button></div>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Tarefa</th><th>Equipe</th><th>Responsável</th><th>Status</th><th>Urgência</th><th></th></tr></thead><tbody id="all-tasks-body"></tbody></table></div>
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">ATIVIDADES</span>
+            <h1>Todas as tarefas</h1>
+            <p>Consulte e gerencie as atividades disponíveis para você.</p>
+          </div>
+          <button class="btn btn-primary" id="new-task-button-alt">＋ Nova tarefa</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tarefa</th><th>Equipe</th><th>Responsável</th>
+                <th>Status</th><th>Urgência</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="all-tasks-body"></tbody>
+          </table>
+        </div>
       </section>
+
+      <!-- EQUIPES -->
       <section class="page-section" id="page-teams">
-        <div class="page-heading"><div><span class="eyebrow">COLABORAÇÃO</span><h1>Equipes</h1><p>Organize pessoas e acompanhe o trabalho em conjunto.</p></div><button class="btn btn-primary" id="new-team-button">＋ Nova equipe</button></div>
-        <div class="team-grid" id="team-grid"><div class="empty-state">Carregando equipes...</div></div>
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">COLABORAÇÃO</span>
+            <h1>Equipes</h1>
+            <p>Organize pessoas e acompanhe o trabalho em conjunto.</p>
+          </div>
+          <button class="btn btn-primary" id="new-team-button">＋ Nova equipe</button>
+        </div>
+        <div class="team-grid" id="team-grid">
+          <div class="empty-state">Carregando equipes...</div>
+        </div>
       </section>
+
+      <!-- DESEMPENHO -->
       <section class="page-section" id="page-dashboard">
-        <div class="page-heading"><div><span class="eyebrow">ANÁLISE</span><h1>Desempenho</h1><p>Indicadores das tarefas que você pode visualizar.</p></div><select id="dashboard-team-filter" class="filter-select"><option value="">Todas as equipes</option></select></div>
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">ANÁLISE</span>
+            <h1>Desempenho</h1>
+            <p>Indicadores das tarefas que você pode visualizar.</p>
+          </div>
+          <select id="dashboard-team-filter" class="filter-select">
+            <option value="">Todas as equipes</option>
+          </select>
+        </div>
+
         <section class="stats dashboard-stats">
-          <article class="stat"><span>Taxa de conclusão</span><strong id="completion-rate">0%</strong><small>Concluídas sobre o total</small></article>
-          <article class="stat"><span>Urgência alta</span><strong id="high-priority-count">0</strong><small>Tarefas de alta urgência</small></article>
-          <article class="stat"><span>Equipes disponíveis</span><strong id="team-total">0</strong><small>Equipes no workspace</small></article>
-          <article class="stat"><span>Em andamento</span><strong id="dashboard-progress">0</strong><small>Atividades em execução</small></article>
+          <article class="stat">
+            <span>Taxa de conclusão</span><strong id="completion-rate">0%</strong>
+            <small>Concluídas sobre o total</small>
+          </article>
+          <article class="stat">
+            <span>Urgência alta</span><strong id="high-priority-count">0</strong>
+            <small>Tarefas de alta urgência</small>
+          </article>
+          <article class="stat">
+            <span>Equipes disponíveis</span><strong id="team-total">0</strong>
+            <small>Equipes no workspace</small>
+          </article>
+          <article class="stat">
+            <span>Em andamento</span><strong id="dashboard-progress">0</strong>
+            <small>Atividades em execução</small>
+          </article>
         </section>
-        <div class="section-heading"><div><h2>Resumo por equipe</h2><p>Distribuição de tarefas por status.</p></div></div>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Equipe</th><th>Total</th><th>A fazer</th><th>Em andamento</th><th>Concluídas</th><th>Conclusão</th></tr></thead><tbody id="team-performance-body"></tbody></table></div>
+
+        <div class="section-heading">
+          <div><h2>Resumo por equipe</h2><p>Distribuição de tarefas por status.</p></div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Equipe</th><th>Total</th><th>A fazer</th>
+                <th>Em andamento</th><th>Concluídas</th><th>Conclusão</th>
+              </tr>
+            </thead>
+            <tbody id="team-performance-body"></tbody>
+          </table>
+        </div>
       </section>
+
+      <!-- CADASTRAR USUÁRIO -->
+      <section class="page-section" id="page-user-create">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">GERENCIAMENTO</span>
+            <h1>Cadastrar usuário</h1>
+            <p>Crie uma conta e defina o nível de acesso.</p>
+          </div>
+        </div>
+
+        <div class="modal-card management-form-card">
+          <form id="user-create-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="new-user-first-name">Nome</label>
+                <input id="new-user-first-name" maxlength="150" required>
+              </div>
+              <div class="field">
+                <label for="new-user-last-name">Sobrenome</label>
+                <input id="new-user-last-name" maxlength="150">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="new-user-username">Nome de usuário</label>
+              <input id="new-user-username" maxlength="150" required autocomplete="username">
+            </div>
+
+            <div class="field">
+              <label for="new-user-email">E-mail</label>
+              <input id="new-user-email" type="email" required autocomplete="email">
+            </div>
+
+            <div class="field">
+              <label for="new-user-role">Papel</label>
+              <select id="new-user-role" required>
+                <option value="FUNCIONARIO">Funcionário</option>
+                <option value="GERENTE" class="supremo-only">Gerente</option>
+              </select>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="new-user-password">Senha</label>
+                <input id="new-user-password" type="password" required autocomplete="new-password">
+              </div>
+              <div class="field">
+                <label for="new-user-password2">Confirmar senha</label>
+                <input id="new-user-password2" type="password" required autocomplete="new-password">
+              </div>
+            </div>
+
+            <p class="form-message" id="user-create-message" role="alert"></p>
+
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-primary" id="create-user-button">
+                Cadastrar usuário
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- GERENCIAR USUÁRIOS -->
+      <section class="page-section" id="page-users">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">GERENCIAMENTO</span>
+            <h1>Gerenciar usuários</h1>
+            <p>Consulte, edite e controle o acesso dos usuários.</p>
+          </div>
+          <button class="btn btn-primary" id="go-user-create-button">
+            ＋ Cadastrar usuário
+          </button>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h2>Usuários cadastrados</h2>
+            <p>As contas exibidas dependem do seu nível de acesso.</p>
+          </div>
+          <input type="search" id="user-search" placeholder="Pesquisar usuários...">
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>E-mail</th>
+                <th>Papel</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="5">Carregando usuários...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </div>
   </main>
 </div>
 
-<!-- Modal de tarefa -->
-<div class="modal-overlay" id="task-modal"><div class="modal-card">
-  <div class="modal-header"><div><span class="eyebrow">GERENCIAR ATIVIDADE</span><h2 id="task-modal-title">Nova tarefa</h2><p>Preencha os dados da atividade.</p></div><button type="button" class="icon-button" data-close="task-modal">×</button></div>
-  <form id="task-form">
-    <div class="field"><label for="task-title">Título</label><input id="task-title" maxlength="200" required placeholder="Ex.: Desenvolver tela de login"></div>
-    <div class="field"><label for="task-description">Descrição</label><textarea id="task-description" rows="3" required placeholder="Descreva a atividade"></textarea></div>
-    <div class="form-grid"><div class="field"><label for="task-status">Status</label><select id="task-status"><option value="AF">A fazer</option><option value="EA">Em andamento</option><option value="CO">Concluído</option></select></div><div class="field"><label for="task-priority">Urgência</label><select id="task-priority"><option value="B">Baixa</option><option value="M" selected>Média</option><option value="A">Alta</option></select></div></div>
-    <div class="field"><label for="task-team">Equipe</label><select id="task-team"><option value="">Tarefa pessoal</option></select></div>
-    <div class="field"><label for="task-responsible">Responsável</label><select id="task-responsible" required></select></div>
-    <p class="form-message" id="task-form-message" role="alert"></p>
-    <div class="modal-actions"><button type="button" class="btn btn-light" data-close="task-modal">Cancelar</button><button type="button" id="delete-task-button" class="btn btn-danger hidden">Excluir</button><button type="submit" class="btn btn-primary" id="save-task-button">Criar tarefa</button></div>
-  </form>
-</div></div>
+<!-- MODAL DE TAREFA -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">GERENCIAR ATIVIDADE</span>
+        <h2 id="task-modal-title">Nova tarefa</h2>
+        <p>Preencha os dados da atividade.</p>
+      </div>
+      <button type="button" class="icon-button" data-close="task-modal">×</button>
+    </div>
+    <form id="task-form">
+      <div class="field">
+        <label for="task-title">Título</label>
+        <input id="task-title" maxlength="200" required placeholder="Ex.: Desenvolver tela de login">
+      </div>
+      <div class="field">
+        <label for="task-description">Descrição</label>
+        <textarea id="task-description" rows="3" required placeholder="Descreva a atividade"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="task-status">Status</label>
+          <select id="task-status">
+            <option value="AF">A fazer</option>
+            <option value="EA">Em andamento</option>
+            <option value="CO">Concluído</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-priority">Urgência</label>
+          <select id="task-priority">
+            <option value="B">Baixa</option>
+            <option value="M" selected>Média</option>
+            <option value="A">Alta</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="task-team">Equipe</label>
+        <select id="task-team"><option value="">Tarefa pessoal</option></select>
+      </div>
+      <div class="field">
+        <label for="task-responsible">Responsável</label>
+        <select id="task-responsible" required></select>
+      </div>
+      <p class="form-message" id="task-form-message" role="alert"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-light" data-close="task-modal">Cancelar</button>
+        <button type="button" id="delete-task-button" class="btn btn-danger hidden">Excluir</button>
+        <button type="submit" class="btn btn-primary" id="save-task-button">Criar tarefa</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-<!-- Modal de equipe -->
-<div class="modal-overlay" id="team-modal"><div class="modal-card">
-  <div class="modal-header"><div><span class="eyebrow">WORKSPACE</span><h2 id="team-modal-title">Nova equipe</h2><p>Defina o nome e a gestão da equipe.</p></div><button type="button" class="icon-button" data-close="team-modal">×</button></div>
-  <form id="team-form"><div class="field"><label for="team-name">Nome da equipe</label><input id="team-name" maxlength="100" required></div><div class="field"><label for="team-description">Descrição</label><textarea id="team-description" rows="3"></textarea></div><div class="field hidden" id="team-manager-field"><label for="team-manager">Gerente responsável</label><select id="team-manager"></select></div><p class="form-message" id="team-form-message" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-light" data-close="team-modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar equipe</button></div></form>
-</div></div>
+<!-- MODAL DE EQUIPE -->
+<div class="modal-overlay" id="team-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">WORKSPACE</span>
+        <h2 id="team-modal-title">Nova equipe</h2>
+        <p>Defina o nome e a gestão da equipe.</p>
+      </div>
+      <button type="button" class="icon-button" data-close="team-modal">×</button>
+    </div>
+    <form id="team-form">
+      <div class="field">
+        <label for="team-name">Nome da equipe</label>
+        <input id="team-name" maxlength="100" required>
+      </div>
+      <div class="field">
+        <label for="team-description">Descrição</label>
+        <textarea id="team-description" rows="3"></textarea>
+      </div>
+      <div class="field hidden" id="team-manager-field">
+        <label for="team-manager">Gerente responsável</label>
+        <select id="team-manager"></select>
+      </div>
+      <p class="form-message" id="team-form-message" role="alert"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-light" data-close="team-modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar equipe</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-<!-- Modal de membros -->
-<div class="modal-overlay" id="members-modal"><div class="modal-card modal-wide">
-  <div class="modal-header"><div><span class="eyebrow">COLABORAÇÃO</span><h2 id="members-title">Membros da equipe</h2><p>Adicione pessoas e configure permissões.</p></div><button type="button" class="icon-button" data-close="members-modal">×</button></div>
-  <form id="add-member-form" class="add-member-form"><div class="field"><label for="member-user">Funcionário</label><select id="member-user"></select></div><button class="btn btn-primary" type="submit">Adicionar</button></form>
-  <p class="form-message" id="members-message" role="alert"></p><div id="members-list" class="members-list"></div>
-</div></div>
+<!-- MODAL DE MEMBROS -->
+<div class="modal-overlay" id="members-modal">
+  <div class="modal-card modal-wide">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">COLABORAÇÃO</span>
+        <h2 id="members-title">Membros da equipe</h2>
+        <p>Adicione pessoas e configure permissões.</p>
+      </div>
+      <button type="button" class="icon-button" data-close="members-modal">×</button>
+    </div>
+    <form id="add-member-form" class="add-member-form">
+      <div class="field">
+        <label for="member-user">Funcionário</label>
+        <select id="member-user"></select>
+      </div>
+      <button class="btn btn-primary" type="submit">Adicionar</button>
+    </form>
+    <p class="form-message" id="members-message" role="alert"></p>
+    <div id="members-list" class="members-list"></div>
+  </div>
+</div>
 
-<!-- Modal de histórico -->
-<div class="modal-overlay" id="history-modal"><div class="modal-card">
-  <div class="modal-header"><div><span class="eyebrow">ATIVIDADE</span><h2>Histórico da tarefa</h2><p id="history-task-title"></p></div><button type="button" class="icon-button" data-close="history-modal">×</button></div>
-  <div id="history-list" class="history-list"></div>
-</div></div>
+<!-- MODAL DE HISTÓRICO -->
+<div class="modal-overlay" id="history-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">ATIVIDADE</span>
+        <h2>Histórico da tarefa</h2>
+        <p id="history-task-title"></p>
+      </div>
+      <button type="button" class="icon-button" data-close="history-modal">×</button>
+    </div>
+    <div id="history-list" class="history-list"></div>
+  </div>
+</div>
+
+<!-- MODAL DE EDIÇÃO DE USUÁRIO -->
+<div class="modal-overlay" id="user-edit-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">GERENCIAMENTO</span>
+        <h2>Editar usuário</h2>
+        <p>Atualize os dados e as permissões da conta.</p>
+      </div>
+      <button type="button" class="icon-button" data-close="user-edit-modal">×</button>
+    </div>
+
+    <form id="user-edit-form">
+      <input type="hidden" id="edit-user-id">
+
+      <div class="field">
+        <label for="edit-user-username">Nome de usuário</label>
+        <input id="edit-user-username" disabled>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="edit-user-first-name">Nome</label>
+          <input id="edit-user-first-name" maxlength="150" required>
+        </div>
+        <div class="field">
+          <label for="edit-user-last-name">Sobrenome</label>
+          <input id="edit-user-last-name" maxlength="150">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="edit-user-email">E-mail</label>
+        <input id="edit-user-email" type="email" required>
+      </div>
+
+      <div class="field">
+        <label for="edit-user-role">Papel</label>
+        <select id="edit-user-role" required>
+          <option value="FUNCIONARIO">Funcionário</option>
+          <option value="GERENTE" class="supremo-only">Gerente</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="edit-user-password">Nova senha</label>
+        <input id="edit-user-password" type="password"
+               autocomplete="new-password"
+               placeholder="Deixe vazio para não alterar">
+      </div>
+
+      <p class="form-message" id="user-edit-message" role="alert"></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-light" data-close="user-edit-modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="toast-region" class="toast-region" aria-live="polite"></div>
+
 <script src="{% static 'gestao_tarefas/js/app.js' %}" defer></script>
 {% endblock %}

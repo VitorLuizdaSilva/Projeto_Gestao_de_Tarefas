@@ -9,3 +9,50 @@
 @media(max-width:1150px){.stats{grid-template-columns:repeat(2,1fr)}.team-grid{grid-template-columns:repeat(2,1fr)}.kanban-board{grid-template-columns:repeat(2,minmax(220px,1fr))}.kanban-column:last-child{grid-column:1/-1}}
 @media(max-width:850px){.sidebar{width:72px;padding:17px 8px}.sidebar-brand{justify-content:center;padding:0 0 25px}.sidebar-brand>span:last-child,.workspace-switch,.sidebar-label,.sidebar-link{font-size:0}.sidebar-link{justify-content:center;padding:13px 5px}.sidebar-link span{font-size:19px}.sidebar-user{justify-content:center;padding:5px 0}.user-info,.sidebar-logout span{display:none}.sidebar-logout{text-align:center}.main-content{margin-left:72px}.topbar{padding:0 18px}.page-content{padding:25px 18px}.breadcrumb{display:none}.mobile-brand{display:flex;align-items:center;gap:8px}.mobile-brand .brand-mark{width:29px;height:29px;font-size:13px}.mobile-brand strong{font-size:15px}}
 @media(max-width:620px){.topbar{height:auto;min-height:65px;flex-wrap:wrap;padding:10px 13px}.topbar-actions{width:100%}.search-box{flex:1;width:auto}.topbar-actions>.btn{white-space:nowrap;padding:10px}.page-content{padding:20px 12px}.page-heading{align-items:flex-start;flex-direction:column}.page-heading h1{font-size:25px}.stats{gap:9px}.stat{padding:14px;min-height:115px}.stat strong{font-size:25px}.kanban-board{grid-template-columns:1fr}.kanban-column:last-child{grid-column:auto}.section-heading{align-items:flex-start;flex-direction:column}.board-filters{width:100%}.board-filters select{flex:1;min-width:0}.team-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.modal-card{padding:19px}.member-row{grid-template-columns:1fr 1fr;gap:8px}.member-row button{justify-self:start}.add-member-form{align-items:stretch;flex-direction:column}}
+
+/* Gerenciamento de usuários */
+
+.management-form-card {
+    max-width: 760px;
+    margin: 24px auto;
+}
+
+.management-form-card .field {
+    margin-bottom: 18px;
+}
+
+.management-form-card .modal-actions {
+    justify-content: flex-end;
+}
+
+#user-search {
+    max-width: 260px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+}
+
+#users-table-body small {
+    display: block;
+    opacity: .65;
+    margin-top: 4px;
+}
+
+#users-table-body .table-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#users-table-body .danger-action {
+    color: #dc3545;
+}
+
+#user-edit-modal .field,
+#user-create-form .field {
+    margin-bottom: 16px;
+}
+
+.supremo-only[hidden] {
+    display: none !important;
+}

@@ -9,16 +9,22 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.permissions import AllowAny
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.conf import settings
+from django.contrib.auth.models import User, Group
+from rest_framework.views import APIView
+from .api_permissions import papel,  PodeAcessarTarefa
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.utils.decorators import method_decorator
 from .models import (
     Equipe,
     MembroEquipe,
     Tarefa,
-    HistoricoTarefa
+    HistoricoTarefa,
+    Perfil
 )
 from .api_serializers import (
     EquipeSerializer,
@@ -27,7 +33,6 @@ from .api_serializers import (
     CadastroSerializer,
     UsuarioAtualSerializer
 )
-from .api_permissions import papel, PodeAcessarTarefa
 
 
 class EquipeViewSet(viewsets.ModelViewSet):
@@ -595,15 +600,96 @@ class DesempenhoViewSet(viewsets.ViewSet):
 
         return Response(dados)
 
-from rest_framework import generics
-from rest_framework.permissions import AllowAny
-
-from .api_serializers import CadastroSerializer
 
 
-class CadastroAPIView(generics.CreateAPIView):
-    serializer_class = CadastroSerializer
-    permission_classes = [AllowAny]
+
+class CadastroSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        validators=[validate_password],
+    )
+    password2 = serializers.CharField(write_only=True)
+
+    papel = serializers.ChoiceField(
+        choices=Perfil.Papel.choices,
+        required=False,
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "password2",
+            "papel",
+        ]
+        read_only_fields = ["id"]
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({
+                "password2": "As senhas não coincidem."
+            })
+
+        solicitante = self.context["request"].user
+        role_solicitante = papel(solicitante)
+
+        papel_solicitado = attrs.get(
+            "papel",
+            Perfil.Papel.FUNCIONARIO,
+        )
+
+        if role_solicitante == "GERENTE":
+            if papel_solicitado != "FUNCIONARIO":
+                raise serializers.ValidationError({
+                    "papel": "Gerentes só podem cadastrar funcionários."
+                })
+
+        elif role_solicitante == "SUPREMO":
+            if papel_solicitado not in ("GERENTE", "FUNCIONARIO"):
+                raise serializers.ValidationError({
+                    "papel": "Papel inválido."
+                })
+
+        else:
+            raise serializers.ValidationError(
+                "Você não pode cadastrar usuários."
+            )
+
+        attrs["papel"] = papel_solicitado
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        validated_data.pop("password2")
+        password = validated_data.pop("password")
+        novo_papel = validated_data.pop(
+            "papel",
+            Perfil.Papel.FUNCIONARIO,
+        )
+
+        usuario = User(**validated_data)
+        usuario.set_password(password)
+        usuario.is_active = True
+        usuario.save()
+
+        perfil, _ = Perfil.objects.get_or_create(
+            user=usuario,
+            defaults={"papel": novo_papel},
+        )
+
+        perfil.papel = novo_papel
+        perfil.save(update_fields=["papel"])
+
+        sincronizar_grupo(usuario, novo_papel)
+
+        return usuario
+
+
 
 class LoginSerializer(TokenObtainPairSerializer):
     username_field = 'username'
@@ -706,3 +792,234 @@ def csrf_cookie(request):
     return JsonResponse({
         'detail': 'Cookie CSRF disponibilizado.'
     })
+
+
+
+def sincronizar_grupo(usuario, novo_papel):
+    nomes_grupos = {
+        Perfil.Papel.SUPREMO: "Supremo",
+        Perfil.Papel.GERENTE: "Gerente",
+        Perfil.Papel.FUNCIONARIO: "Funcionario",
+    }
+
+    nome_grupo = nomes_grupos.get(novo_papel)
+
+    if not nome_grupo:
+        raise ValidationError({"papel": "Papel inválido."})
+
+    grupo, _ = Group.objects.get_or_create(name=nome_grupo)
+
+    usuario.groups.clear()
+    usuario.groups.add(grupo)
+
+
+def pode_gerenciar_usuario(solicitante, alvo):
+    papel_solicitante = papel(solicitante)
+    papel_alvo = papel(alvo)
+
+    if papel_solicitante == "SUPREMO":
+        return True
+
+    if papel_solicitante == "GERENTE":
+        return (
+            papel_alvo == "FUNCIONARIO"
+            and not alvo.is_superuser
+        )
+
+    return False
+
+
+def quantidade_supremos_ativos():
+    return User.objects.filter(
+        is_active=True
+    ).filter(
+        # Usuários com perfil Supremo ou superusuários Django.
+        # O distinct evita contar o mesmo usuário duas vezes.
+        perfil__papel=Perfil.Papel.SUPREMO
+    ).count() + User.objects.filter(
+        is_active=True,
+        is_superuser=True
+    ).exclude(
+        perfil__papel=Perfil.Papel.SUPREMO
+    ).count()
+
+
+class UsuariosAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        role = papel(request.user)
+
+        if role not in ("SUPREMO", "GERENTE"):
+            raise PermissionDenied(
+                "Você não pode consultar a lista de usuários."
+            )
+
+        usuarios = User.objects.select_related(
+            "perfil"
+        ).order_by("username")
+
+        if role == "GERENTE":
+            usuarios = usuarios.filter(
+                perfil__papel=Perfil.Papel.FUNCIONARIO,
+                is_superuser=False,
+            )
+        else:
+            # O Supremo pode visualizar todos, inclusive outros
+            # superusuários, sem poder rebaixar um superusuário.
+            pass
+
+        dados = []
+
+        for usuario in usuarios:
+            dados.append({
+                "id": usuario.id,
+                "username": usuario.username,
+                "first_name": usuario.first_name,
+                "last_name": usuario.last_name,
+                "email": usuario.email,
+                "papel": papel(usuario),
+                "is_active": usuario.is_active,
+                "is_superuser": usuario.is_superuser,
+            })
+
+        return Response(dados)
+
+
+class UsuarioDetalheAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @transaction.atomic
+    def patch(self, request, pk):
+        alvo = get_object_or_404(
+            User.objects.select_related("perfil"),
+            pk=pk,
+        )
+
+        if not pode_gerenciar_usuario(request.user, alvo):
+            raise PermissionDenied(
+                "Você não pode editar este usuário."
+            )
+
+        if alvo.is_superuser:
+            raise PermissionDenied(
+                "Não é permitido editar uma conta de superusuário por esta tela."
+            )
+
+        dados_permitidos = {
+            "first_name",
+            "last_name",
+            "email",
+        }
+
+        campos_invalidos = set(request.data.keys()) - (
+            dados_permitidos | {"papel"}
+        )
+
+        if campos_invalidos:
+            raise ValidationError({
+                "detail": "Foram enviados campos não permitidos."
+            })
+
+        for campo in dados_permitidos:
+            if campo in request.data:
+                setattr(alvo, campo, request.data[campo])
+
+        if "papel" in request.data:
+            papel_solicitante = papel(request.user)
+            novo_papel = request.data["papel"]
+
+            if papel_solicitante != "SUPREMO":
+                raise PermissionDenied(
+                    "Somente o Supremo pode alterar papéis."
+                )
+
+            if novo_papel not in (
+                Perfil.Papel.GERENTE,
+                Perfil.Papel.FUNCIONARIO,
+            ):
+                raise ValidationError({
+                    "papel": "Papel inválido."
+                })
+
+            perfil, _ = Perfil.objects.get_or_create(
+                user=alvo,
+                defaults={
+                    "papel": Perfil.Papel.FUNCIONARIO
+                },
+            )
+
+            perfil.papel = novo_papel
+            perfil.save(update_fields=["papel"])
+
+            sincronizar_grupo(alvo, novo_papel)
+
+        alvo.save()
+
+        return Response({
+            "id": alvo.id,
+            "username": alvo.username,
+            "first_name": alvo.first_name,
+            "last_name": alvo.last_name,
+            "email": alvo.email,
+            "papel": papel(alvo),
+            "is_active": alvo.is_active,
+        })
+
+
+class UsuarioStatusAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @transaction.atomic
+    def patch(self, request, pk):
+        alvo = get_object_or_404(
+            User.objects.select_related("perfil"),
+            pk=pk,
+        )
+
+        if not pode_gerenciar_usuario(request.user, alvo):
+            raise PermissionDenied(
+                "Você não pode alterar o status deste usuário."
+            )
+
+        if alvo.is_superuser:
+            raise PermissionDenied(
+                "Não é permitido alterar o status de um superusuário por esta tela."
+            )
+
+        if "is_active" not in request.data:
+            raise ValidationError({
+                "is_active": "Informe o novo status do usuário."
+            })
+
+        novo_status = request.data["is_active"]
+
+        if not isinstance(novo_status, bool):
+            raise ValidationError({
+                "is_active": "O status deve ser verdadeiro ou falso."
+            })
+
+        if alvo.pk == request.user.pk and not novo_status:
+            raise ValidationError(
+                "Você não pode desativar sua própria conta."
+            )
+
+        if not novo_status and papel(alvo) == "SUPREMO":
+            if quantidade_supremos_ativos() <= 1:
+                raise ValidationError(
+                    "Não é possível desativar o último Supremo ativo."
+                )
+
+        alvo.is_active = novo_status
+        alvo.save(update_fields=["is_active"])
+
+        return Response({
+            "id": alvo.id,
+            "username": alvo.username,
+            "is_active": alvo.is_active,
+            "message": (
+                "Usuário ativado."
+                if novo_status
+                else "Usuário desativado."
+            ),
+        })
