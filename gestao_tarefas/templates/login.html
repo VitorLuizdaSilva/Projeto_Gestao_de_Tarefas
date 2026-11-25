@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Entrar | NexTask{% endblock %}
+{% block content %}
+<main class="auth-shell">
+  <section class="auth-visual">
+    <a class="brand" href="/"><span class="brand-mark">N</span> NexTask</a>
+    <div><span class="eyebrow">GESTÃO INTELIGENTE</span><h1>Organize o trabalho.<br>Faça acontecer.</h1>
+    <p>Reúna tarefas, equipes e resultados em um único espaço de trabalho.</p></div>
+    <div class="auth-visual-foot">Planeje melhor. Colabore mais. Entregue sempre.</div>
+  </section>
+  <section class="auth-panel"><div class="auth-card">
+    <span class="eyebrow">SEU WORKSPACE</span><h2>Boas-vindas de volta</h2>
+    <p class="muted">Entre na sua conta para continuar.</p>
+    <form id="login-form">
+      <div class="field"><label for="username">Usuário</label><input id="username" autocomplete="username" required autofocus placeholder="Seu usuário"></div>
+      <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div>
+      <button class="btn btn-primary btn-full" type="submit">Entrar <span>→</span></button>
+      <p class="form-message" id="login-message" role="alert"></p>
+    </form>
+    <div class="auth-link">Ainda não tem uma conta? <a href="{% url 'cadastro' %}">Criar conta</a></div>
+  </div></section>
+</main>
+<script src="{% static 'gestao_tarefas/js/auth.js' %}" defer></script>
+{% endblock %}
