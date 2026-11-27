@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Criar conta | NexTask{% endblock %}
+{% block content %}
+<main class="auth-shell">
+  <section class="auth-visual">
+    <a class="brand" href="/"><span class="brand-mark">N</span> NexTask</a>
+    <div><span class="eyebrow">COMECE AGORA</span><h1>Seu próximo passo começa aqui.</h1>
+    <p>Crie sua conta e transforme suas tarefas em um fluxo de trabalho simples e organizado.</p></div>
+    <div class="auth-visual-foot">Seu espaço para fazer grandes coisas.</div>
+  </section>
+  <section class="auth-panel"><div class="auth-card">
+    <span class="eyebrow">NOVO WORKSPACE</span><h2>Criar sua conta</h2>
+    <p class="muted">Preencha os dados para começar.</p>
+    <form id="register-form">
+      <div class="field"><label for="reg-username">Nome de usuário</label><input id="reg-username" autocomplete="username" maxlength="150" required></div>
+      <div class="field"><label for="reg-email">E-mail</label><input id="reg-email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="reg-password">Senha</label><input id="reg-password" type="password" autocomplete="new-password" required></div>
+      <div class="field"><label for="reg-password2">Confirmar senha</label><input id="reg-password2" type="password" autocomplete="new-password" required></div>
+      <button class="btn btn-primary btn-full" type="submit">Criar conta <span>→</span></button>
+      <p class="form-message" id="register-message" role="alert"></p>
+    </form>
+    <div class="auth-link">Já tem uma conta? <a href="{% url 'login' %}">Fazer login</a></div>
+  </div></section>
+</main>
+<script src="{% static 'gestao_tarefas/js/auth.js' %}" defer></script>
+{% endblock %}
